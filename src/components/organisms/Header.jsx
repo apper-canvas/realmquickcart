@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cartService } from "@/services/api/cartService";
-import { useAuth } from "@/layouts/Root";
+import { useSelector } from "react-redux";
 import { cn } from "@/utils/cn";
+import { useAuth } from "@/layouts/Root";
 import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
+import Login from "@/components/pages/Login";
 import Button from "@/components/atoms/Button";
 import Badge from "@/components/atoms/Badge";
 
@@ -24,6 +26,7 @@ const LogoutButton = () => {
 
 const Header = ({ className }) => {
   const { logout } = useAuth();
+  const { isAuthenticated } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItemCount, setCartItemCount] = useState(0);
@@ -107,15 +110,14 @@ const Header = ({ className }) => {
               className="text-primary hover:text-accent font-medium transition-colors duration-200"
             >
               Shop
-            </Link>
+</Link>
             
-<Link
+            <Link
               to="/orders"
               className="text-primary hover:text-accent font-medium transition-colors duration-200"
             >
               Orders
             </Link>
-
             <Link
               to="/wishlist"
               className="text-primary hover:text-accent font-medium transition-colors duration-200 flex items-center gap-2"
@@ -140,8 +142,15 @@ const Header = ({ className }) => {
                 </Badge>
               )}
             </Link>
-
-            <LogoutButton />
+{isAuthenticated ? <LogoutButton /> : (
+              <button
+                onClick={() => navigate('/login')}
+                className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
+              >
+                <ApperIcon name="LogIn" className="w-5 h-5" />
+                <span>Login</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -192,16 +201,16 @@ const Header = ({ className }) => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="block text-primary hover:text-accent font-medium transition-colors duration-200"
             >
-              Shop
+Shop
             </Link>
-<Link
+            
+            <Link
               to="/orders"
               onClick={() => setIsMobileMenuOpen(false)}
               className="block text-primary hover:text-accent font-medium transition-colors duration-200"
             >
               Orders
             </Link>
-
             <Link
               to="/wishlist"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -223,18 +232,31 @@ const Header = ({ className }) => {
                   {cartItemCount}
                 </Badge>
               )}
-            </Link>
+</Link>
 
-<button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                logout();
-              }}
-              className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
-            >
-              <ApperIcon name="LogOut" className="w-5 h-5" />
-              <span>Logout</span>
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  logout();
+                }}
+                className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
+              >
+                <ApperIcon name="LogOut" className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigate('/login');
+                }}
+                className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
+              >
+                <ApperIcon name="LogIn" className="w-5 h-5" />
+                <span>Login</span>
+              </button>
+            )}
           </div>
         </div>
       )}
