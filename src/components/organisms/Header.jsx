@@ -23,6 +23,7 @@ const LogoutButton = () => {
 };
 
 const Header = ({ className }) => {
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItemCount, setCartItemCount] = useState(0);
@@ -227,7 +228,6 @@ const Header = ({ className }) => {
 <button
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                const { logout } = useAuth();
                 logout();
               }}
               className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
