@@ -1,10 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { cn } from "@/utils/cn";
-import SearchBar from "@/components/molecules/SearchBar";
-import Badge from "@/components/atoms/Badge";
-import ApperIcon from "@/components/ApperIcon";
 import { cartService } from "@/services/api/cartService";
+import { useAuth } from "@/layouts/Root";
+import { cn } from "@/utils/cn";
+import ApperIcon from "@/components/ApperIcon";
+import SearchBar from "@/components/molecules/SearchBar";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+
+const LogoutButton = () => {
+  const { logout } = useAuth();
+
+  return (
+    <button
+      onClick={logout}
+      className="text-primary hover:text-accent font-medium transition-colors duration-200 flex items-center gap-2"
+    >
+      <ApperIcon name="LogOut" className="w-5 h-5" />
+      <span>Logout</span>
+    </button>
+  );
+};
 
 const Header = ({ className }) => {
   const navigate = useNavigate();
@@ -106,6 +122,7 @@ const Header = ({ className }) => {
               <ApperIcon name="Heart" className="w-5 h-5" />
               <span>Wishlist</span>
             </Link>
+            
             <Link
               to="/cart"
               className="relative flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200 group"
@@ -122,6 +139,8 @@ const Header = ({ className }) => {
                 </Badge>
               )}
             </Link>
+
+            <LogoutButton />
           </div>
 
           {/* Mobile Menu Button */}
@@ -174,7 +193,6 @@ const Header = ({ className }) => {
             >
               Shop
             </Link>
-            
 <Link
               to="/orders"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -205,6 +223,17 @@ const Header = ({ className }) => {
                 </Badge>
               )}
             </Link>
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                logout();
+              }}
+              className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
+            >
+              <ApperIcon name="LogOut" className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       )}

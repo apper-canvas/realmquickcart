@@ -1,82 +1,142 @@
-import ordersData from "@/services/mockData/orders.json";
-import { format } from "date-fns";
+import { getApperClient } from "@/services/apperClient";
 
 class OrderService {
   constructor() {
-    this.storageKey = "quickcart_orders";
-    this.loadFromStorage();
-  }
-
-  loadFromStorage() {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      this.orders = stored ? JSON.parse(stored) : [...ordersData];
-    } catch (error) {
-      console.error("Error loading orders from storage:", error);
-      this.orders = [...ordersData];
-    }
-  }
-
-  saveToStorage() {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.orders));
-    } catch (error) {
-      console.error("Error saving orders to storage:", error);
-    }
+    this.tableName = 'orders_c';
   }
 
   async getAll() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([...this.orders]);
-      }, 250);
-    });
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.fetchRecords(this.tableName, {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "order_number_c"}},
+          {"field": {"Name": "order_date_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "total_amount_c"}},
+          {"field": {"Name": "items_c"}}
+        ],
+        orderBy: [{
+          "fieldName": "order_date_c",
+          "sorttype": "DESC"
+        }]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      return response.data.map(order => ({
+        ...order,
+        id: order.order_number_c,
+        orderDate: order.order_date_c,
+        status: order.status_c,
+        totalAmount: order.total_amount_c,
+        items: order.items_c ? JSON.parse(order.items_c) : []
+      }));
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      return [];
+    }
   }
 
   async getById(id) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const order = this.orders.find(o => o.Id === parseInt(id));
-        if (order) {
-          resolve({ ...order });
-        } else {
-          reject(new Error("Order not found"));
-        }
-      }, 200);
-    });
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.getRecordById(this.tableName, parseInt(id), {
+        fields: [
+          {"field": {"Name": "Id"}},
+          {"field": {"Name": "order_number_c"}},
+          {"field": {"Name": "order_date_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "total_amount_c"}},
+          {"field": {"Name": "items_c"}}
+        ]
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Order not found");
+      }
+
+      const order = response.data;
+      return {
+        ...order,
+        id: order.order_number_c,
+        orderDate: order.order_date_c,
+        status: order.status_c,
+        totalAmount: order.total_amount_c,
+        items: order.items_c ? JSON.parse(order.items_c) : []
+      };
+    } catch (error) {
+      console.error(`Error fetching order ${id}:`, error);
+      throw error;
+    }
   }
 
   async create(orderData) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const highestId = this.orders.length > 0 
-          ? Math.max(...this.orders.map(o => o.Id)) 
-          : 0;
-        
-        const newOrder = {
-          Id: highestId + 1,
-          ...orderData,
-          orderDate: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
-          status: "confirmed"
-        };
+    try {
+      const apperClient = getApperClient();
+      const orderNumber = await this.generateOrderNumber();
+      
+      const response = await apperClient.createRecord(this.tableName, {
+        records: [{
+          order_number_c: orderData.id || orderNumber,
+          order_date_c: orderData.orderDate || new Date().toISOString(),
+          status_c: orderData.status || "confirmed",
+          total_amount_c: orderData.totalAmount,
+          items_c: JSON.stringify(orderData.items || [])
+        }]
+      });
 
-        this.orders.push(newOrder);
-        this.saveToStorage();
-        resolve({ ...newOrder });
-      }, 400);
-    });
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message || "Failed to create order");
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create order: ${failed.map(f => f.message).join(', ')}`);
+          failed.forEach(record => {
+            if (record.message) throw new Error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const order = successful[0].data;
+          return {
+            ...order,
+            id: order.order_number_c,
+            orderDate: order.order_date_c,
+            status: order.status_c,
+            totalAmount: order.total_amount_c,
+            items: order.items_c ? JSON.parse(order.items_c) : []
+          };
+        }
+      }
+
+      throw new Error("Failed to create order");
+    } catch (error) {
+      console.error("Error creating order:", error);
+      throw error;
+    }
   }
 
   async generateOrderNumber() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const timestamp = Date.now();
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-        const orderNumber = `QC${timestamp}${randomSuffix}`;
-        resolve(orderNumber);
-      }, 100);
-    });
+    try {
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+      return `QC${timestamp}${randomSuffix}`;
+    } catch (error) {
+      console.error("Error generating order number:", error);
+      return `QC${Date.now()}000`;
+    }
   }
 }
 
+export const orderService = new OrderService();
 export const orderService = new OrderService();
