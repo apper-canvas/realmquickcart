@@ -92,13 +92,20 @@ const Header = ({ className }) => {
               Shop
             </Link>
             
-            <Link
+<Link
               to="/orders"
               className="text-primary hover:text-accent font-medium transition-colors duration-200"
             >
               Orders
             </Link>
 
+            <Link
+              to="/wishlist"
+              className="text-primary hover:text-accent font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              <ApperIcon name="Heart" className="w-5 h-5" />
+              <span>Wishlist</span>
+            </Link>
             <Link
               to="/cart"
               className="relative flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200 group"
@@ -168,12 +175,21 @@ const Header = ({ className }) => {
               Shop
             </Link>
             
-            <Link
+<Link
               to="/orders"
               onClick={() => setIsMobileMenuOpen(false)}
               className="block text-primary hover:text-accent font-medium transition-colors duration-200"
             >
               Orders
+            </Link>
+
+            <Link
+              to="/wishlist"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
+            >
+              <ApperIcon name="Heart" className="w-5 h-5" />
+              <span>Wishlist</span>
             </Link>
 
             <Link
