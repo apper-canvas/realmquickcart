@@ -372,5 +372,3 @@ class ProductService {
 }
 
 export const productService = new ProductService();
-
-export const productService = new ProductService();

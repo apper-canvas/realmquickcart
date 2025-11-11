@@ -139,4 +139,3 @@ class OrderService {
 }
 
 export const orderService = new OrderService();
-export const orderService = new OrderService();

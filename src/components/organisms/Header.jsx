@@ -224,9 +224,10 @@ const Header = ({ className }) => {
               )}
             </Link>
 
-            <button
+<button
               onClick={() => {
                 setIsMobileMenuOpen(false);
+                const { logout } = useAuth();
                 logout();
               }}
               className="flex items-center gap-2 text-primary hover:text-accent font-medium transition-colors duration-200"
