@@ -1,11 +1,20 @@
 import { getApperClient } from "@/services/apperClient";
+import { store } from "@/store";
 
 class OrderService {
   constructor() {
     this.tableName = 'orders_c';
   }
 
-  async getAll() {
+async getAll() {
+    // Check if user is authenticated
+    const state = store.getState();
+    const { isAuthenticated } = state.user;
+    
+    if (!isAuthenticated) {
+      return [];
+    }
+    
     try {
       const apperClient = getApperClient();
       const response = await apperClient.fetchRecords(this.tableName, {
@@ -43,7 +52,15 @@ class OrderService {
   }
 
   async getById(id) {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return null;
+      }
+      
       const apperClient = getApperClient();
       const response = await apperClient.getRecordById(this.tableName, parseInt(id), {
         fields: [
@@ -76,7 +93,15 @@ class OrderService {
   }
 
   async create(orderData) {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return null;
+      }
+      
       const apperClient = getApperClient();
       const orderNumber = await this.generateOrderNumber();
       

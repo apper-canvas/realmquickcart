@@ -1,11 +1,20 @@
 import { getApperClient } from "@/services/apperClient";
+import { store } from "@/store";
 
 class CartService {
   constructor() {
     this.tableName = 'cart_items_c';
   }
 
-  async getAll() {
+async getAll() {
+    // Check if user is authenticated
+    const state = store.getState();
+    const { isAuthenticated } = state.user;
+    
+    if (!isAuthenticated) {
+      return [];
+    }
+    
     try {
       const apperClient = getApperClient();
       const response = await apperClient.fetchRecords(this.tableName, {
@@ -40,8 +49,15 @@ class CartService {
 
   async addItem(product, quantity = 1) {
     try {
-      const apperClient = getApperClient();
+// Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
       
+      if (!isAuthenticated) {
+        return null;
+      }
+      
+      const apperClient = getApperClient();
       // First check if item already exists in cart
       const existingItems = await this.getAll();
       const existingItem = existingItems.find(item => item.productId === product.Id);
@@ -88,8 +104,15 @@ class CartService {
 
   async updateQuantity(productId, quantity) {
     try {
-      const apperClient = getApperClient();
+// Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
       
+      if (!isAuthenticated) {
+        return null;
+      }
+      
+      const apperClient = getApperClient();
       if (quantity <= 0) {
         return await this.removeItem(productId);
       }
@@ -133,7 +156,15 @@ class CartService {
   }
 
   async removeItem(productId) {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return false;
+      }
+      
       const apperClient = getApperClient();
       
       // Find cart item by product ID
@@ -172,7 +203,15 @@ class CartService {
   }
 
   async clear() {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return 0;
+      }
+      
       const cartItems = await this.getAll();
       if (cartItems.length === 0) {
         return [];
@@ -204,7 +243,15 @@ class CartService {
   }
 
   async getItemCount() {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return 0;
+      }
+      
       const cartItems = await this.getAll();
       return cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
     } catch (error) {
@@ -214,7 +261,15 @@ class CartService {
   }
 
   async getTotal() {
-    try {
+try {
+      // Check if user is authenticated
+      const state = store.getState();
+      const { isAuthenticated } = state.user;
+      
+      if (!isAuthenticated) {
+        return [];
+      }
+      
       const cartItems = await this.getAll();
       return cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
     } catch (error) {
