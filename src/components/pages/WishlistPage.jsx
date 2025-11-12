@@ -33,7 +33,7 @@ const WishlistPage = () => {
       await cartService.addItem(product, 1);
       
       // Then remove from wishlist
-      await wishlistService.removeFromWishlist(product.Id);
+await wishlistService.remove(product.Id);
       
       // Update local state by removing the item
       setWishlistItems(prev => prev.filter(item => item.productId !== product.Id));
