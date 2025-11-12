@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { wishlistService } from '@/services/api/wishlistService';
 import { productService } from '@/services/api/productService';
+import { cartService } from '@/services/api/cartService';
 import ApperIcon from '@/components/ApperIcon';
 import Button from '@/components/atoms/Button';
 import Card from '@/components/atoms/Card';
@@ -16,7 +17,48 @@ const WishlistPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(new Set());
+  const [moving, setMoving] = useState(new Set());
 
+  // Handle moving item from wishlist to cart
+  const handleMoveToCart = async (product) => {
+    if (product.stock === 0) {
+      toast.error('This item is out of stock');
+      return;
+    }
+
+    setMoving(prev => new Set([...prev, product.Id]));
+
+    try {
+      // First, add to cart
+      await cartService.addItem(product, 1);
+      
+      // Then remove from wishlist
+      await wishlistService.removeFromWishlist(product.Id);
+      
+      // Update local state by removing the item
+      setWishlistItems(prev => prev.filter(item => item.productId !== product.Id));
+      setProducts(prev => prev.filter(p => p.Id !== product.Id));
+      
+      toast.success(`${product.name} moved to cart successfully!`);
+    } catch (error) {
+      console.error('Error moving item to cart:', error);
+      
+      // Provide specific error feedback
+      if (error.message?.includes('cart')) {
+        toast.error('Failed to add item to cart. Please try again.');
+      } else if (error.message?.includes('wishlist')) {
+        toast.error('Item was added to cart but could not be removed from wishlist.');
+      } else {
+        toast.error('Failed to move item to cart. Please try again.');
+      }
+    } finally {
+      setMoving(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(product.Id);
+        return newSet;
+      });
+    }
+  };
   useEffect(() => {
     fetchWishlistData();
   }, []);
@@ -246,7 +288,7 @@ const WishlistPage = () => {
                         </div>
                       </div>
                       
-                      <Link to={`/product/${product.Id}`}>
+<Link to={`/product/${product.Id}`}>
                         <Button
                           size="sm"
                           className="shadow-elevated"
@@ -254,6 +296,26 @@ const WishlistPage = () => {
                           <ApperIcon name="Eye" size={16} />
                         </Button>
                       </Link>
+                      
+                      {/* Move to Cart Button */}
+                      <Button
+                        size="sm"
+                        onClick={() => handleMoveToCart(product)}
+                        disabled={isOutOfStock || moving.has(product.Id)}
+                        className={cn(
+                          "shadow-elevated transition-all duration-200",
+                          isOutOfStock 
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                            : "bg-accent text-white hover:bg-accent/90",
+                          moving.has(product.Id) && "opacity-50"
+                        )}
+                      >
+                        <ApperIcon 
+                          name={moving.has(product.Id) ? "Loader2" : "ShoppingCart"} 
+                          size={16} 
+                          className={moving.has(product.Id) ? "animate-spin" : ""}
+                        />
+                      </Button>
                     </div>
                   </div>
                 </Card>
